@@ -1,0 +1,491 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+  runtime  = "nodejs"
+  importFileExtension = "ts"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum GradeLevel {
+  XI
+  XII
+  OTHER
+}
+
+enum RelocationMode {
+  STAY
+  OPEN
+  SELECTED
+}
+
+enum HousingMode {
+  FAMILY
+  RENT
+  UNKNOWN
+}
+
+enum PublicationStatus {
+  DRAFT
+  REVIEWED
+  PUBLISHED
+  STALE
+  ARCHIVED
+}
+
+enum ScholarshipStatus {
+  UPCOMING
+  OPEN
+  CLOSED
+  UNKNOWN
+}
+
+enum AttemptStatus {
+  DRAFT
+  RUNNING
+  RESULT_READY
+  COMPLETED
+}
+
+enum PlanStatus {
+  DRAFT
+  ACTIVE
+  REVIEWED
+  ARCHIVED
+}
+
+enum TaskStatus {
+  TODO
+  DOING
+  DONE
+  SKIPPED
+}
+
+model Source {
+  id             String   @id @default(uuid()) @db.Uuid
+  url            String   @db.Text
+  publisher      String   @db.VarChar(160)
+  title          String   @db.VarChar(240)
+  applicableYear Int      @map("applicable_year")
+  checkedAt      DateTime @map("checked_at") @db.Timestamptz(6)
+  reviewStatus   String   @map("review_status") @db.VarChar(40)
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  programs     Program[]
+  costProfiles CostProfile[]
+  curricula    Curriculum[]
+  scholarships Scholarship[]
+  tasks        Task[]
+
+  @@index([publisher])
+  @@map("sources")
+}
+
+model Major {
+  id                   String           @id @db.VarChar(40)
+  name                 String           @db.VarChar(120)
+  summary              String           @db.Text
+  heuristicWeightsJson Json             @map("heuristic_weights_json")
+  prepSubjectsJson     Json             @map("prep_subjects_json")
+  publicationStatus    PublicationStatus @default(DRAFT) @map("publication_status")
+  createdAt            DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt            DateTime         @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  programs     Program[]
+  missions     Mission[]
+  careerMajors CareerMajor[]
+
+  @@map("majors")
+}
+
+model University {
+  id              String  @id @db.VarChar(40)
+  name            String  @db.VarChar(160)
+  cityCode        String  @map("city_code") @db.VarChar(40)
+  provinceCode    String  @map("province_code") @db.VarChar(40)
+  officialWebsite String  @map("official_website") @db.Text
+
+  programs Program[]
+
+  @@map("universities")
+}
+
+model Program {
+  id                String            @id @db.VarChar(80)
+  majorId           String            @map("major_id") @db.VarChar(40)
+  universityId      String            @map("university_id") @db.VarChar(40)
+  name              String            @db.VarChar(200)
+  campusLocation    String            @map("campus_location") @db.VarChar(160)
+  degree            String            @db.VarChar(60)
+  admissionPathsJson Json             @map("admission_paths_json")
+  sourceId          String            @map("source_id") @db.Uuid
+  publicationStatus PublicationStatus @default(DRAFT) @map("publication_status")
+  createdAt         DateTime          @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt         DateTime          @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  major      Major         @relation(fields: [majorId], references: [id], onDelete: Restrict)
+  university University    @relation(fields: [universityId], references: [id], onDelete: Restrict)
+  source     Source        @relation(fields: [sourceId], references: [id], onDelete: Restrict)
+  costProfiles CostProfile[]
+  curricula    Curriculum[]
+
+  @@index([majorId, publicationStatus])
+  @@index([universityId])
+  @@map("programs")
+}
+
+model CostProfile {
+  id             String      @id @default(uuid()) @db.Uuid
+  programId      String      @map("program_id") @db.VarChar(80)
+  academicYear   Int         @map("academic_year")
+  admissionTrack String      @map("admission_track") @db.VarChar(60)
+  housingMode    HousingMode @map("housing_mode")
+  version        String      @db.VarChar(40)
+  componentsJson Json        @map("components_json")
+  sourceId       String      @map("source_id") @db.Uuid
+  createdAt      DateTime    @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  program Program @relation(fields: [programId], references: [id], onDelete: Cascade)
+  source  Source  @relation(fields: [sourceId], references: [id], onDelete: Restrict)
+
+  @@unique([programId, academicYear, admissionTrack, housingMode, version])
+  @@index([programId])
+  @@map("cost_profiles")
+}
+
+model Curriculum {
+  id             String   @id @default(uuid()) @db.Uuid
+  programId      String   @map("program_id") @db.VarChar(80)
+  curriculumYear Int      @map("curriculum_year")
+  version        String   @db.VarChar(40)
+  rulesJson      Json     @map("rules_json")
+  sourceId       String   @map("source_id") @db.Uuid
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  program Program @relation(fields: [programId], references: [id], onDelete: Cascade)
+  source  Source  @relation(fields: [sourceId], references: [id], onDelete: Restrict)
+
+  @@unique([programId, curriculumYear, version])
+  @@index([programId])
+  @@map("curricula")
+}
+
+model Scholarship {
+  id           String            @id @db.VarChar(80)
+  name         String            @db.VarChar(200)
+  organizer    String            @db.VarChar(160)
+  aidType      String            @map("aid_type") @db.VarChar(60)
+  scopeJson    Json              @map("scope_json")
+  benefitsJson Json              @map("benefits_json")
+  datesJson    Json              @map("dates_json")
+  status       ScholarshipStatus  @default(UNKNOWN)
+  sourceId     String            @map("source_id") @db.Uuid
+  createdAt    DateTime          @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  source Source @relation(fields: [sourceId], references: [id], onDelete: Restrict)
+
+  @@index([status])
+  @@map("scholarships")
+}
+
+model Mission {
+  id                String            @id @db.VarChar(80)
+  missionVersion    String            @map("mission_version") @db.VarChar(40)
+  engineVersion     String            @map("engine_version") @db.VarChar(40)
+  majorId           String            @map("major_id") @db.VarChar(40)
+  title             String            @db.VarChar(200)
+  configJson        Json              @map("config_json")
+  reviewerName      String            @map("reviewer_name") @db.VarChar(120)
+  publicationStatus PublicationStatus @default(DRAFT) @map("publication_status")
+  createdAt         DateTime          @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  major    Major     @relation(fields: [majorId], references: [id], onDelete: Restrict)
+  attempts Attempt[]
+
+  @@index([majorId])
+  @@map("missions")
+}
+
+model Career {
+  id                String            @id @db.VarChar(80)
+  title             String            @db.VarChar(160)
+  summary           String            @db.Text
+  activitiesJson    Json              @map("activities_json")
+  reviewedBy        String            @map("reviewed_by") @db.VarChar(120)
+  sourceIdsJson     Json              @map("source_ids_json")
+  publicationStatus PublicationStatus @default(DRAFT) @map("publication_status")
+  createdAt         DateTime          @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  careerMajors CareerMajor[]
+  careerSkills CareerSkill[]
+
+  @@map("careers")
+}
+
+model Skill {
+  id          String @id @db.VarChar(80)
+  name        String @db.VarChar(120)
+  description String @db.Text
+
+  careerSkills CareerSkill[]
+
+  @@map("skills")
+}
+
+model CareerMajor {
+  careerId     String @map("career_id") @db.VarChar(80)
+  majorId      String @map("major_id") @db.VarChar(40)
+  mappingReason String @map("mapping_reason") @db.Text
+
+  career Career @relation(fields: [careerId], references: [id], onDelete: Cascade)
+  major  Major  @relation(fields: [majorId], references: [id], onDelete: Cascade)
+
+  @@id([careerId, majorId])
+  @@index([majorId])
+  @@map("career_majors")
+}
+
+model CareerSkill {
+  careerId String @map("career_id") @db.VarChar(80)
+  skillId  String @map("skill_id") @db.VarChar(80)
+
+  career Career @relation(fields: [careerId], references: [id], onDelete: Cascade)
+  skill  Skill  @relation(fields: [skillId], references: [id], onDelete: Cascade)
+
+  @@id([careerId, skillId])
+  @@index([skillId])
+  @@map("career_skills")
+}
+
+model Profile {
+  userId      String  @id @map("user_id") @db.Uuid
+  displayName String? @map("display_name") @db.VarChar(120)
+
+  gradeLevel     GradeLevel?     @map("grade_level")
+  graduationYear Int?            @map("graduation_year")
+  cityCode       String?         @map("city_code") @db.VarChar(40)
+  provinceCode   String?         @map("province_code") @db.VarChar(40)
+  relocationMode RelocationMode? @map("relocation_mode")
+  preferredRegionsJson Json?     @map("preferred_regions_json")
+  preferredMajorsJson   Json?     @map("preferred_majors_json")
+
+  monthlyBudgetMin Int?            @map("monthly_budget_min")
+  monthlyBudgetMax Int?            @map("monthly_budget_max")
+  upfrontBudgetMax Int?            @map("upfront_budget_max")
+  housingMode      HousingMode?    @map("housing_mode")
+  pinnedProgramsJson Json? @map("pinned_programs_json")
+  version Int @default(1)
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  consents            Consent[]
+  academicRecords     AcademicRecord[]
+  interestSubmissions InterestSubmission[]
+  recommendationRuns  RecommendationRun[]
+  attempts            Attempt[]
+  reflections         Reflection[]
+  shortlist           Shortlist?
+  scenarios           Scenario[]
+  plans               Plan[]
+  passports           Passport[]
+
+  @@map("profiles")
+}
+
+model Consent {
+  id             String   @id @default(uuid()) @db.Uuid
+  userId         String   @map("user_id") @db.Uuid
+  purposeVersion String   @map("purpose_version") @db.VarChar(40)
+  isAccepted     Boolean  @map("is_accepted")
+  consentedAt    DateTime @map("consented_at") @db.Timestamptz(6)
+
+  profile Profile @relation(fields: [userId], references: [userId], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("consents")
+}
+
+model AcademicRecord {
+  id       String @id @default(uuid()) @db.Uuid
+  userId   String @map("user_id") @db.Uuid
+  subject  String @db.VarChar(100)
+  semester Int
+  score    Float
+  scale    String @default("0-100") @db.VarChar(20)
+  profile Profile @relation(fields: [userId], references: [userId], onDelete: Cascade)
+
+  @@unique([userId, subject, semester])
+  @@index([userId])
+  @@map("academic_records")
+}
+
+model InterestSubmission {
+  id                String   @id @default(uuid()) @db.Uuid
+  userId            String   @map("user_id") @db.Uuid
+  instrumentVersion String   @map("instrument_version") @db.VarChar(40)
+  answersJson       Json     @map("answers_json")
+  submittedAt       DateTime @default(now()) @map("submitted_at") @db.Timestamptz(6)
+
+  profile Profile @relation(fields: [userId], references: [userId], onDelete: Cascade)
+
+  @@index([userId, submittedAt])
+  @@map("interest_submissions")
+}
+
+model RecommendationRun {
+  id                String   @id @default(uuid()) @db.Uuid
+  userId            String   @map("user_id") @db.Uuid
+  profileVersion    Int      @map("profile_version")
+  ruleVersion       String   @map("rule_version") @db.VarChar(40)
+  catalogVersion    String   @map("catalog_version") @db.VarChar(40)
+  inputsSnapshotJson Json    @map("inputs_snapshot_json")
+  resultsJson        Json    @map("results_json")
+  createdAt          DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  profile Profile @relation(fields: [userId], references: [userId], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@map("recommendation_runs")
+}
+
+model Attempt {
+  id             String        @id @default(uuid()) @db.Uuid
+  userId         String        @map("user_id") @db.Uuid
+  missionId      String        @map("mission_id") @db.VarChar(80)
+  missionVersion String        @map("mission_version") @db.VarChar(40)
+  seed           String        @db.VarChar(64)
+  status         AttemptStatus @default(DRAFT)
+  artifactJson   Json?         @map("artifact_json")
+  resultJson     Json?         @map("result_json")
+  revision        Int @default(0)
+  lastRunRevision Int? @map("last_run_revision")
+  idempotencyKey  String @map("idempotency_key") @db.VarChar(120)
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  profile     Profile     @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  mission     Mission     @relation(fields: [missionId], references: [id], onDelete: Restrict)
+  reflections Reflection[]
+
+  @@unique([userId, idempotencyKey])
+  @@index([userId, createdAt])
+  @@map("attempts")
+}
+
+model Reflection {
+  id            String   @id @default(uuid()) @db.Uuid
+  userId        String   @map("user_id") @db.Uuid
+  attemptId     String   @map("attempt_id") @db.Uuid
+  revision      Int
+  responsesJson Json     @map("responses_json")
+  isActive      Boolean  @default(false) @map("is_active")
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  profile Profile @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  attempt Attempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+
+  @@unique([attemptId, revision])
+  @@index([userId, isActive])
+  @@map("reflections")
+}
+
+model Shortlist {
+  userId         String   @id @map("user_id") @db.Uuid
+  programIdsJson Json     @map("program_ids_json")
+  baseVersion    Int      @map("base_version")
+  updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  profile Profile @relation(fields: [userId], references: [userId], onDelete: Cascade)
+
+  @@map("shortlists")
+}
+
+model Scenario {
+  id                 String   @id @default(uuid()) @db.Uuid
+  userId             String   @map("user_id") @db.Uuid
+  baseProfileVersion Int      @map("base_profile_version")
+  overridesJson      Json     @map("overrides_json")
+  resultsJson        Json     @map("results_json")
+  createdAt          DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  profile Profile @relation(fields: [userId], references: [userId], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@map("scenarios")
+}
+
+model Plan {
+  id             String     @id @default(uuid()) @db.Uuid
+  userId         String     @map("user_id") @db.Uuid
+  goalIdsJson    Json       @map("goal_ids_json")
+  weeklyMinutes  Int        @map("weekly_minutes")
+  startDate      DateTime   @map("start_date") @db.Date
+  version        Int        @default(1)
+  status         PlanStatus @default(DRAFT)
+  idempotencyKey String     @map("idempotency_key") @db.VarChar(120)
+  createdAt      DateTime   @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime   @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  profile Profile @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  tasks   Task[]
+
+  @@unique([userId, idempotencyKey])
+  @@index([userId, status])
+  @@map("plans")
+}
+
+model Task {
+  id                 String     @id @default(uuid()) @db.Uuid
+  planId             String     @map("plan_id") @db.Uuid
+  prerequisiteTaskId String?    @map("prerequisite_task_id") @db.Uuid
+  title              String     @db.VarChar(200)
+  actionType         String     @map("action_type") @db.VarChar(60)
+  estimatedMinutes   Int        @map("estimated_minutes")
+  dueDate            DateTime   @map("due_date") @db.Date
+  status             TaskStatus @default(TODO)
+  evidenceNote       String?    @map("evidence_note") @db.Text
+  evidenceUrl        String?    @map("evidence_url") @db.Text
+  sourceId           String?    @map("source_id") @db.Uuid
+  version            Int        @default(1)
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  plan             Plan   @relation(fields: [planId], references: [id], onDelete: Cascade)
+  prerequisiteTask Task?  @relation("TaskPrerequisite", fields: [prerequisiteTaskId], references: [id], onDelete: SetNull)
+  dependents       Task[] @relation("TaskPrerequisite")
+  source           Source? @relation(fields: [sourceId], references: [id], onDelete: SetNull)
+
+  @@index([planId])
+  @@index([prerequisiteTaskId])
+  @@map("tasks")
+}
+
+model Passport {
+  id      String @id @default(uuid()) @db.Uuid
+  ownerId String @map("owner_id") @db.Uuid
+  snapshotJson   Json     @map("snapshot_json")
+  redactionsJson Json     @map("redactions_json")
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  profile Profile @relation(fields: [ownerId], references: [userId], onDelete: Cascade)
+
+  @@index([ownerId, createdAt])
+  @@map("passports")
+}
+
+model AuditLog {
+  id           String   @id @default(uuid()) @db.Uuid
+  userId       String?  @map("user_id") @db.Uuid
+  eventName    String   @map("event_name") @db.VarChar(120)
+  requestId    String?  @map("request_id") @db.VarChar(80)
+  metadataJson Json?    @map("metadata_json")
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@index([userId, createdAt])
+  @@index([eventName, createdAt])
+  @@map("audit_logs")
+}
