@@ -29,9 +29,14 @@ jobs:
 
       # `src/generated` is git-ignored, so a fresh checkout has no Prisma
       # client and every type-check would fail to resolve its imports.
-      # `prisma generate` reads only prisma/schema.prisma, so this step needs
-      # neither a database nor a secret.
+      #
+      # prisma.config.ts resolves a connection URL eagerly so that a missing
+      # credential fails loudly. `generate` never opens a connection, but the
+      # config file still has to load, so the variable only needs to exist.
+      # Nothing below dials this URL.
       - run: pnpm run prisma:generate
+        env:
+          DATABASE_URL: postgresql://ci:ci@localhost:5432/ci
 
       - run: pnpm run typecheck
       - run: pnpm run lint
