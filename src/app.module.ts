@@ -15,6 +15,9 @@ import { ReflectionsModule } from './reflections/reflection.module.js';
 import { ComparisonsModule } from './comparisons/comparison.module.js';
 import { PlansModule } from './plans/plan.module.js';
 import { PassportsModule } from './passports/passport.module.js';
+import { MissionsModule } from './missions/mission.module.js';
+import { CareersModule } from './careers/career.module.js';
+import { SimulationSubmissionsModule } from './simulations/simulation-submission.module.js';
 
 @Module({
   imports: [
@@ -31,6 +34,9 @@ import { PassportsModule } from './passports/passport.module.js';
     ComparisonsModule,
     PlansModule,
     PassportsModule,
+    MissionsModule,
+    CareersModule,
+    SimulationSubmissionsModule,
   ],
   providers: [
     // Order matters: authentication must resolve the principal before roles

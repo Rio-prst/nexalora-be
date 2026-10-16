@@ -26,6 +26,8 @@ import { IRecommendationRepository } from './interfaces/recommendation.repositor
 import type {
   RecommendationInputs,
   StoredCatalogProgram,
+  StoredRecommendationRun,
+  StoredRecommendationRunSummary,
 } from './interfaces/recommendation.repository.interface.js';
 import type { IRecommendationService } from './interfaces/recommendation.service.interface.js';
 
@@ -98,6 +100,23 @@ export class RecommendationService implements IRecommendationService {
     }
 
     return stored.results as RecommendationRunPayload;
+  }
+
+  async history(
+    userId: string,
+    limit = 20,
+  ): Promise<StoredRecommendationRunSummary[]> {
+    return this.repository.listRuns(userId, limit);
+  }
+
+  async getById(userId: string, id: string): Promise<StoredRecommendationRun> {
+    const stored = await this.repository.findOwnedRun(userId, id);
+
+    if (!stored) {
+      throw notFound('Recommendation run not found');
+    }
+
+    return stored;
   }
 
   private buildPayload(inputs: RecommendationInputs): RecommendationRunPayload {

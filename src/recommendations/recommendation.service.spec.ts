@@ -129,6 +129,12 @@ function build(overrides: Partial<RecommendationInputs> = {}) {
   const findLatestRun = jest.fn<
     (userId: string) => Promise<StoredRecommendationRun | null>
   >(() => Promise.resolve(null));
+  const listRuns = jest.fn((_userId: string, _limit: number) =>
+    Promise.resolve([]),
+  );
+  const findOwnedRun = jest.fn((_userId: string, _id: string) =>
+    Promise.resolve(null),
+  );
 
   const repository = {
     findProfile,
@@ -138,6 +144,8 @@ function build(overrides: Partial<RecommendationInputs> = {}) {
     findActiveReflections,
     insertRun,
     findLatestRun,
+    listRuns,
+    findOwnedRun,
   } as unknown as IRecommendationRepository;
 
   return {
@@ -149,6 +157,8 @@ function build(overrides: Partial<RecommendationInputs> = {}) {
     findActiveReflections,
     insertRun,
     findLatestRun,
+    listRuns,
+    findOwnedRun,
   };
 }
 
@@ -304,6 +314,58 @@ describe('RecommendationService', () => {
       const { service } = build();
 
       await expect(service.latest(USER_ID)).rejects.toMatchObject({
+        code: 'NOT_FOUND',
+      });
+    });
+  });
+
+  describe('history', () => {
+    it('returns run summaries from the repository', async () => {
+      const { service, listRuns } = build();
+      const summaries = [
+        {
+          id: 'run_1',
+          ruleVersion: 'v1',
+          catalogVersion: 'v1',
+          profileVersion: 1,
+          createdAt: new Date(),
+        },
+      ];
+      listRuns.mockResolvedValue(summaries as never);
+
+      const result = await service.history(USER_ID, 10);
+
+      expect(listRuns).toHaveBeenCalledWith(USER_ID, 10);
+      expect(result).toBe(summaries);
+    });
+  });
+
+  describe('getById', () => {
+    it('returns the owned run from the repository', async () => {
+      const { service, findOwnedRun } = build();
+      const run = {
+        id: 'run_1',
+        ruleVersion: 'v1',
+        catalogVersion: 'v1',
+        profileVersion: 1,
+        results: {},
+        createdAt: new Date(),
+      };
+      findOwnedRun.mockResolvedValue(run as never);
+
+      const result = await service.getById(USER_ID, 'run_1');
+
+      expect(findOwnedRun).toHaveBeenCalledWith(USER_ID, 'run_1');
+      expect(result).toBe(run);
+    });
+
+    it('throws notFound if the run is missing or not owned', async () => {
+      const { service, findOwnedRun } = build();
+      findOwnedRun.mockResolvedValue(null);
+
+      await expect(
+        service.getById(USER_ID, 'run_missing'),
+      ).rejects.toMatchObject({
         code: 'NOT_FOUND',
       });
     });

@@ -25,7 +25,7 @@ function createContext(request: Partial<Request>): ExecutionContext {
 function createGuard(principal: AuthenticatedUser): JwtAuthGuard {
   const authService = {
     resolvePrincipal: () => principal,
-  } as IAuthService;
+  } as unknown as IAuthService;
 
   return new JwtAuthGuard(
     { getAllAndOverride: () => undefined } as unknown as Reflector,
@@ -40,7 +40,7 @@ describe('JwtAuthGuard', () => {
     const request = { headers: {} } as Request;
     const guard = new JwtAuthGuard(
       { getAllAndOverride: () => true } as unknown as Reflector,
-      { resolvePrincipal: () => principal },
+      { resolvePrincipal: () => principal } as unknown as IAuthService,
     );
 
     expect(guard.canActivate(createContext(request))).toBe(true);

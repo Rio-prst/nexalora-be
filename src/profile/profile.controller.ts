@@ -28,6 +28,9 @@ import type { ApiResponse as ApiEnvelope } from '../common/types/api-response.js
 import type { ProfileSnapshot } from './dto/profile.response.dto.js';
 import type { UpdateProfileDto } from './dto/update-profile.dto.js';
 import { UpdateProfileSchema } from './dto/update-profile.dto.js';
+import { notFound } from '../common/errors/app-error.js';
+import { IProfileExportRepository } from './interfaces/profile-export.repository.interface.js';
+import type { AccountDataExport } from './interfaces/profile-export.repository.interface.js';
 import { IProfileService } from './interfaces/profile.service.interface.js';
 import { PROFILE_ROUTES } from './profile.routes.js';
 
@@ -36,6 +39,8 @@ import { PROFILE_ROUTES } from './profile.routes.js';
 export class ProfileController {
   constructor(
     @Inject(IProfileService) private readonly profileService: IProfileService,
+    @Inject(IProfileExportRepository)
+    private readonly exportRepository: IProfileExportRepository,
   ) {}
 
   @Get(PROFILE_ROUTES.base)
@@ -89,5 +94,36 @@ export class ProfileController {
     @CurrentUser() user: AuthenticatedUser,
   ): Promise<void> {
     await this.profileService.deleteAccountData(user.userId);
+  }
+
+  @Get(PROFILE_ROUTES.accountDataExport)
+  @ApiStandardResponses()
+  @ApiOperation({
+    summary:
+      'Download every private record held for the authenticated account.',
+  })
+  @ApiOkResponse({
+    description:
+      'A single JSON archive covering the profile, grades, answers, runs, attempts, reflections, plans, and passports.',
+  })
+  async exportAccountData(
+    @CurrentUser() user: AuthenticatedUser,
+    @Res({ passthrough: true }) response: Response,
+  ): Promise<ApiEnvelope<AccountDataExport>> {
+    const data = await this.exportRepository.loadAll(user.userId);
+
+    if (!data) {
+      throw notFound('Profile not found');
+    }
+
+    response.setHeader(
+      'Content-Disposition',
+      `attachment; filename="nexalora-export-${user.userId}.json"`,
+    );
+
+    return {
+      data,
+      meta: { requestId: readRequestId(response) },
+    };
   }
 }

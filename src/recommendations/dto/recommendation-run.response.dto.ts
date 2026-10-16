@@ -66,3 +66,11 @@ export type RecommendationRunPayload = {
   majors: MajorRecommendation[];
   items: ProgramRecommendation[];
 };
+
+export type RecommendationHistoryItem = {
+  id: string;
+  profileVersion: number;
+  ruleVersion: string;
+  catalogVersion: string;
+  createdAt: string;
+};

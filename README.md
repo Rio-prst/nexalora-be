@@ -281,6 +281,11 @@ The server starts on `http://localhost:3000`.
 | `GET /api/health/ready` | Readiness probe. Runs `SELECT 1` against PostgreSQL. |
 | `GET /api/catalog` | Published majors and programs. Public. |
 | `GET /api/catalog/programs/:id` | One program with costs, curriculum, and sources. Public. |
+| `GET /api/missions` | Published simulation missions. Public. |
+| `GET /api/missions/:id` | One mission including its learning stages. Public. |
+| `GET /api/careers` | Published career profiles. Public. |
+| `GET /api/careers/:id` | One career with skills and challenges. Public. |
+| `GET /api/interests/questions` | The 12 interest items and their answer scale. Public. |
 | `GET /api/profile` | The authenticated student's profile, academic records, and consents. |
 | `PATCH /api/profile` | Update profile, records, and consent. Requires `expectedVersion`. |
 | `POST /api/interests` | Store an immutable 12-item activity-interest submission. |
@@ -301,6 +306,7 @@ The server starts on `http://localhost:3000`.
 | `POST /api/passports` | Create an immutable snapshot with server-side redaction. |
 | `GET /api/passports/:id` | Read a passport snapshot for the printable page. |
 | `DELETE /api/account-data` | Delete every private record for the authenticated account. |
+| `GET /api/account-data/export` | Download every private record as a JSON archive. |
 | `GET /docs` | Interactive Swagger UI. |
 
 All routes except `/api/health`, `/api/health/ready`, and `/api/catalog*`
@@ -459,20 +465,26 @@ The core infrastructure is in place. Completed:
 - [x] `comparisons` module (`/api/shortlist`, `POST /api/scenarios`, isolated what-if)
 - [x] `plans` module (`/api/plans` and `/api/tasks/:id`, deterministic 30-day generator)
 - [x] `passports` module (`POST /api/passports`, `GET /api/passports/:id`, server-side redaction)
+- [x] `missions` module (`GET /api/missions`, `GET /api/missions/:id`)
+- [x] `careers` module (`GET /api/careers`, `GET /api/careers/:id`)
+- [x] `GET /api/interests/questions` (the instrument served from the database)
+- [x] `GET /api/account-data/export` (data portability archive)
 - [x] `health` module and Swagger at `/docs`
 - [x] Jest unit / integration / e2e test separation
 - [x] GitHub Actions verification on every push
+- [x] Deployed to Vercel serverless with Supabase PostgreSQL
 
 Not yet implemented:
 
-- [ ] `careers` module (career cards are exposed only through `catalog` and `plans` goals)
 - [ ] `audit` module (event logging, cross-cutting, no endpoint of its own)
 
 Catalogue seed rows are written as `DRAFT`, so `GET /api/catalog` returns
 nothing until you re-seed with `SEED_PUBLICATION_STATUS=PUBLISHED`.
 
-Simulation missions and scholarships are seeded but not yet exposed on their
-own endpoints; they arrive with the modules that own them.
+Career salary ranges and mission stage content are not authored yet. Both
+endpoints return `null` and `[]` respectively, and `salaryRange.verified`
+is `false`, so the frontend can show that the figure is unknown rather
+than treat it as zero.
 
 ---
 

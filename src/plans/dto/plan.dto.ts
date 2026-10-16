@@ -18,10 +18,30 @@ export const ActivatePlanSchema = z
   })
   .strict();
 
+const TASK_STATUS_MAP: Record<string, 'TODO' | 'DOING' | 'DONE' | 'SKIPPED'> = {
+  pending: 'TODO',
+  in_progress: 'DOING',
+  done: 'DONE',
+  skipped: 'SKIPPED',
+  todo: 'TODO',
+  doing: 'DOING',
+};
+
 export const UpdateTaskSchema = z
   .object({
     expectedVersion: z.number().int().positive(),
-    status: z.enum(['TODO', 'DOING', 'DONE', 'SKIPPED']).optional(),
+    status: z
+      .preprocess(
+        (val) => {
+          if (typeof val === 'string') {
+            const mapped = TASK_STATUS_MAP[val.toLowerCase()];
+            return mapped ?? val;
+          }
+          return val;
+        },
+        z.enum(['TODO', 'DOING', 'DONE', 'SKIPPED']),
+      )
+      .optional(),
     dueDate: z
       .string()
       .regex(/^\d{4}-\d{2}-\d{2}$/)

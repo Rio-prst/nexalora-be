@@ -5,6 +5,7 @@ import {
   HttpCode,
   HttpStatus,
   Inject,
+  Param,
   Post,
   Res,
 } from '@nestjs/common';
@@ -28,6 +29,10 @@ import {
   type CreateRecommendationDto,
 } from './dto/create-recommendation.dto.js';
 import type { RecommendationRunPayload } from './dto/recommendation-run.response.dto.js';
+import type {
+  StoredRecommendationRun,
+  StoredRecommendationRunSummary,
+} from './interfaces/recommendation.repository.interface.js';
 import { IRecommendationService } from './interfaces/recommendation.service.interface.js';
 import { RECOMMENDATION_ROUTES } from './recommendation.routes.js';
 
@@ -77,6 +82,61 @@ export class RecommendationController {
   ): Promise<ApiEnvelope<RecommendationRunPayload>> {
     return {
       data: await this.recommendationService.latest(user.userId),
+      meta: { requestId: readRequestId(response) },
+    };
+  }
+
+  @Get(RECOMMENDATION_ROUTES.base)
+  @ApiStandardResponses()
+  @ApiOperation({
+    summary:
+      'Read the most recent run without recomputing. Alias of /recommendations/latest.',
+  })
+  @ApiOkResponse({
+    description:
+      'The latest stored run. Returns 404 when no run has been computed yet; use POST to compute one.',
+  })
+  async readLatest(
+    @CurrentUser() user: AuthenticatedUser,
+    @Res({ passthrough: true }) response: Response,
+  ): Promise<ApiEnvelope<RecommendationRunPayload>> {
+    return {
+      data: await this.recommendationService.latest(user.userId),
+      meta: { requestId: readRequestId(response) },
+    };
+  }
+
+  @Get(RECOMMENDATION_ROUTES.history)
+  @ApiStandardResponses()
+  @ApiOperation({
+    summary:
+      'List recommendation version history for the authenticated caller.',
+  })
+  @ApiOkResponse({ description: 'The recommendation run history.' })
+  async history(
+    @CurrentUser() user: AuthenticatedUser,
+    @Res({ passthrough: true }) response: Response,
+  ): Promise<ApiEnvelope<StoredRecommendationRunSummary[]>> {
+    return {
+      data: await this.recommendationService.history(user.userId),
+      meta: { requestId: readRequestId(response) },
+    };
+  }
+
+  @Get(RECOMMENDATION_ROUTES.detail)
+  @ApiStandardResponses()
+  @ApiOperation({
+    summary:
+      'Read a specific recommendation version with evidence and snapshot.',
+  })
+  @ApiOkResponse({ description: 'The detailed recommendation run.' })
+  async getById(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('id') id: string,
+    @Res({ passthrough: true }) response: Response,
+  ): Promise<ApiEnvelope<StoredRecommendationRun>> {
+    return {
+      data: await this.recommendationService.getById(user.userId, id),
       meta: { requestId: readRequestId(response) },
     };
   }

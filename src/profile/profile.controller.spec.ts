@@ -2,6 +2,10 @@ import { describe, expect, it, jest } from '@jest/globals';
 import type { Response } from 'express';
 import { ProfileController } from './profile.controller.js';
 import type { IProfileService } from './interfaces/profile.service.interface.js';
+import type {
+  AccountDataExport,
+  IProfileExportRepository,
+} from './interfaces/profile-export.repository.interface.js';
 import type { AuthenticatedUser } from '../common/types/authenticated-user.js';
 import type { ProfileSnapshot } from './dto/profile.response.dto.js';
 import type { UpdateProfileDto } from './dto/update-profile.dto.js';
@@ -58,8 +62,14 @@ function build() {
     deleteAccountData,
   } as unknown as IProfileService;
 
+  const exportRepository = {
+    loadAll: jest.fn<(userId: string) => Promise<AccountDataExport | null>>(
+      () => Promise.resolve(null),
+    ),
+  } as unknown as IProfileExportRepository;
+
   return {
-    controller: new ProfileController(service),
+    controller: new ProfileController(service, exportRepository),
     getProfile,
     updateProfile,
     deleteAccountData,
