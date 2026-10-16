@@ -7,6 +7,7 @@ import { RolesGuard } from './common/guards/roles.guard.js';
 import { PrismaModule } from './infra/prisma/prisma.module.js';
 import { HealthModule } from './health/health.module.js';
 import { ProfileModule } from './profile/profile.module.js';
+import { InterestsModule } from './interests/interest-submission.module.js';
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { ProfileModule } from './profile/profile.module.js';
     PrismaModule,
     HealthModule,
     ProfileModule,
+    InterestsModule,
   ],
   providers: [
     // Order matters: authentication must resolve the principal before roles
