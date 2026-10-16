@@ -1,0 +1,3 @@
+export const CURRICULUM_STALE_YEARS = 1;
+
+export const PLACEHOLDER_MARK = '[PLACEHOLDER]';
