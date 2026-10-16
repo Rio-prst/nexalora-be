@@ -8,6 +8,7 @@ import { PrismaModule } from './infra/prisma/prisma.module.js';
 import { HealthModule } from './health/health.module.js';
 import { ProfileModule } from './profile/profile.module.js';
 import { InterestsModule } from './interests/interest-submission.module.js';
+import { CatalogModule } from './catalog/catalog.module.js';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { InterestsModule } from './interests/interest-submission.module.js';
     HealthModule,
     ProfileModule,
     InterestsModule,
+    CatalogModule,
   ],
   providers: [
     // Order matters: authentication must resolve the principal before roles
