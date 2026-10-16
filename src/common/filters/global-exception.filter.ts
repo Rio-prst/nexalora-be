@@ -9,7 +9,7 @@ import {
 import type { Request, Response } from 'express';
 import { AppError } from '../errors/app-error.js';
 import type { ApiErrorResponse, ErrorCode } from '../types/api-response.js';
-import { readRequestId } from '../interceptors/request-id.interceptor.js';
+import { readRequestId } from '../middleware/request-id.middleware.js';
 
 const STATUS_TO_CODE: Readonly<Record<number, ErrorCode>> = {
   [HttpStatus.BAD_REQUEST]: 'VALIDATION_ERROR',

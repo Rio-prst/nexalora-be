@@ -1,6 +1,6 @@
 import type { INestApplication } from '@nestjs/common';
 import { GlobalExceptionFilter } from './common/filters/global-exception.filter.js';
-import { RequestIdInterceptor } from './common/interceptors/request-id.interceptor.js';
+import { requestIdMiddleware } from './common/middleware/request-id.middleware.js';
 
 /**
  * Applies the same global wiring to every entrypoint.
@@ -18,9 +18,10 @@ export function configureApp<TServer>(
   app.setGlobalPrefix('api');
   app.enableCors();
 
-  // The requestId must exist on the response before the exception filter runs,
-  // so registration order here is load-bearing.
-  app.useGlobalInterceptors(new RequestIdInterceptor());
+  // Middleware, not an interceptor: guards run first, so an interceptor would
+  // not have set the header by the time a 401 is thrown.
+  app.use(requestIdMiddleware);
+
   app.useGlobalFilters(new GlobalExceptionFilter());
 
   return app;

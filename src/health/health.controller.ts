@@ -3,7 +3,7 @@ import { ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 import type { Response } from 'express';
 import { PrismaService } from '../infra/prisma/prisma.service.js';
 import { Public } from '../common/decorators/public.decorator.js';
-import { readRequestId } from '../common/interceptors/request-id.interceptor.js';
+import { readRequestId } from '../common/middleware/request-id.middleware.js';
 import type { ApiResponse as ApiEnvelope } from '../common/types/api-response.js';
 
 interface LivenessBody {
