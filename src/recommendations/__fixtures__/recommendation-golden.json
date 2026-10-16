@@ -1,0 +1,48 @@
+{
+  "ruleVersion": "heuristic-v1",
+  "profileVersion": 3,
+  "coverage": {
+    "answeredDimensions": 4,
+    "isSufficientForPersonalization": true
+  },
+  "majors": [
+    {
+      "majorId": "INF",
+      "experienceStatus": "NOT_TRIED",
+      "reasons": [{ "code": "ACTIVITY_INTEREST", "evidenceId": "sub_golden" }]
+    }
+  ],
+  "items": [
+    {
+      "programId": "itb-inf-s1",
+      "isPinned": true,
+      "reasons": [
+        { "code": "PINNED_BY_STUDENT", "evidenceId": "itb-inf-s1" },
+        { "code": "ACTIVITY_INTEREST", "evidenceId": "sub_golden" }
+      ],
+      "academicStatus": "PARTIAL",
+      "costStatus": "DEPENDS_ON_SCENARIO",
+      "costBreakdown": {
+        "monthlyEquivalentMin": 2000000,
+        "monthlyEquivalentMax": 4000000,
+        "upfrontMax": 2000000,
+        "sourceYear": 2026
+      },
+      "admissionProbability": null
+    },
+    {
+      "programId": "ugm-inf-s1",
+      "isPinned": false,
+      "reasons": [{ "code": "ACTIVITY_INTEREST", "evidenceId": "sub_golden" }],
+      "academicStatus": "PARTIAL",
+      "costStatus": "INSUFFICIENT_DATA",
+      "costBreakdown": {
+        "monthlyEquivalentMin": null,
+        "monthlyEquivalentMax": null,
+        "upfrontMax": null,
+        "sourceYear": 2026
+      },
+      "admissionProbability": null
+    }
+  ]
+}

@@ -9,6 +9,12 @@ import { HealthModule } from './health/health.module.js';
 import { ProfileModule } from './profile/profile.module.js';
 import { InterestsModule } from './interests/interest-submission.module.js';
 import { CatalogModule } from './catalog/catalog.module.js';
+import { RecommendationsModule } from './recommendations/recommendation.module.js';
+import { SimulationsModule } from './simulations/attempt.module.js';
+import { ReflectionsModule } from './reflections/reflection.module.js';
+import { ComparisonsModule } from './comparisons/comparison.module.js';
+import { PlansModule } from './plans/plan.module.js';
+import { PassportsModule } from './passports/passport.module.js';
 
 @Module({
   imports: [
@@ -19,6 +25,12 @@ import { CatalogModule } from './catalog/catalog.module.js';
     ProfileModule,
     InterestsModule,
     CatalogModule,
+    RecommendationsModule,
+    SimulationsModule,
+    ReflectionsModule,
+    ComparisonsModule,
+    PlansModule,
+    PassportsModule,
   ],
   providers: [
     // Order matters: authentication must resolve the principal before roles
