@@ -50,10 +50,7 @@ describe('CatalogController', () => {
   it('passes the path parameter through to the service', async () => {
     const { controller, getProgram } = build();
 
-    const result = await controller.getProgram(
-      'ugm-inf-s1',
-      responseStub(),
-    );
+    const result = await controller.getProgram('ugm-inf-s1', responseStub());
 
     expect(getProgram).toHaveBeenCalledWith('ugm-inf-s1');
     expect(result.data).toEqual({
