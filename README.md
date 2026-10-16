@@ -1,5 +1,7 @@
 # Nexalora — Backend
 
+[![CI](https://github.com/Rio-prst/nexalora-be/actions/workflows/ci.yml/badge.svg)](https://github.com/Rio-prst/nexalora-be/actions/workflows/ci.yml)
+
 Backend REST API for **Nexalora** — a study and career exploration tool that helps senior
 high school students (grades XI–XII) make informed decisions about university majors,
 campuses, and career paths.
@@ -300,7 +302,8 @@ An `X-Request-Id` is always generated or preserved from the incoming request.
 | `pnpm run build` | Compile TypeScript to `dist/` |
 | `pnpm run start:dev` | Start in watch mode |
 | `pnpm run start:prod` | Run the compiled build |
-| `pnpm run lint` | Lint and auto-fix `src/` and `test/` |
+| `pnpm run lint` | Lint `src/` and `test/` |
+| `pnpm run lint:fix` | Lint and auto-fix fixable issues |
 | `pnpm run format` | Format with Prettier |
 | `pnpm run typecheck` | Type-check without emitting |
 | `pnpm test` | Unit tests only — never touches the database |
@@ -346,11 +349,13 @@ A mandatory suite of scenarios is defined in [`docs/BUSSINES-RULES.md`](docs/BUS
 ├── prisma/
 │   ├── schema.prisma           # 25 models, 8 enums
 │   ├── migrations/             # versioned SQL migrations
-│   └── seed.ts                 # catalogue seed entrypoint
+│   ├── seed.ts                 # catalogue seed entrypoint
 │   └── seed/                   # seed data per zone
 ├── src/
-│   ├── main.ts                 # entrypoint: global prefix, filters, Swagger
+│   ├── main.ts                 # entrypoint: Swagger and the process bootstrap
+│   ├── bootstrap.ts            # global prefix, CORS, filters — shared with e2e
 │   ├── app.module.ts
+│   ├── auth/                   # Supabase token verification (IAuthService)
 │   ├── common/                 # cross-cutting: pipes, filters, guards, decorators
 │   │   ├── types/              # AuthenticatedUser, Role, API envelopes
 │   │   ├── errors/             # AppError and the documented error codes
@@ -370,7 +375,7 @@ A mandatory suite of scenarios is defined in [`docs/BUSSINES-RULES.md`](docs/BUS
 │       ├── <entity>.repository.ts
 │       └── *.spec.ts           # tests sit beside the code
 ├── test/
-│   ├── app.e2e-spec.ts
+│   ├── health.e2e-spec.ts
 │   ├── jest-e2e.json
 │   └── jest-integration.json
 ├── docs/                       # product and engineering specifications
@@ -382,22 +387,24 @@ A mandatory suite of scenarios is defined in [`docs/BUSSINES-RULES.md`](docs/BUS
 
 ## Project Status
 
-The project is at the **foundation stage**. Completed:
+The core infrastructure is in place. Completed:
 
 - [x] Product and engineering specifications (`docs/`)
 - [x] NestJS 11 + TypeScript ESM foundation
 - [x] Prisma 7 setup with driver adapter and `prisma.config.ts`
 - [x] 25-table database schema, initial migration applied
 - [x] Reference catalogue seed data (`prisma/seed.ts`)
-- [x] `infra/prisma` — `PrismaService` and `PrismaModule`
-- [x] `common/` — Zod validation, global exception filter, request ID, JWT/roles guards
+- [x] `infra/prisma` - `PrismaService` and `PrismaModule`
+- [x] `common/` - Zod validation, global exception filter, request ID, JWT/roles guards
+- [x] `auth/` - Supabase HS256 token verification and principal resolution
 - [x] `health` module and Swagger at `/docs`
 - [x] Jest unit / integration / e2e test separation
+- [x] GitHub Actions verification on every push
 
 Not yet implemented:
 
-- [ ] `auth` module and the demo-mode synthetic profile (`F01`)
-- [ ] `profile`, `interests`, `catalog` modules
+- [ ] `profile` module (`GET`/`PATCH /api/profile`, `DELETE /api/account-data`)
+- [ ] `interests`, `catalog` modules
 - [ ] `recommendations`, `simulations`, `reflections`, `comparisons` modules
 - [ ] `careers`, `plans`, `passports`, `audit` modules
 

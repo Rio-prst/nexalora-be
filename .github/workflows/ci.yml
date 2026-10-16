@@ -1,0 +1,38 @@
+name: CI
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: Typecheck, lint, unit tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      # `src/generated` is git-ignored, so a fresh checkout has no Prisma
+      # client and every type-check would fail to resolve its imports.
+      # `prisma generate` reads only prisma/schema.prisma, so this step needs
+      # neither a database nor a secret.
+      - run: pnpm run prisma:generate
+
+      - run: pnpm run typecheck
+      - run: pnpm run lint
+      - run: pnpm run test
