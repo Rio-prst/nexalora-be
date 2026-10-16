@@ -3,9 +3,7 @@
   "installCommand": "pnpm install --frozen-lockfile",
   "buildCommand": "pnpm install --frozen-lockfile && pnpm run prisma:generate && pnpm run build",
   "outputDirectory": "dist",
-  "functions": {
-    "dist/vercel.js": {
-      "maxDuration": 60
-    }
-  }
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/vercel.js" }
+  ]
 }
