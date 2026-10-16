@@ -10,6 +10,7 @@ import {
   Res,
 } from '@nestjs/common';
 import {
+  ApiBody,
   ApiConflictResponse,
   ApiOkResponse,
   ApiOperation,
@@ -20,6 +21,7 @@ import type { Response } from 'express';
 import { ApiStandardResponses } from '../common/decorators/api-standard-responses.decorator.js';
 import { CurrentUser } from '../common/decorators/current-user.decorator.js';
 import { readRequestId } from '../common/middleware/request-id.middleware.js';
+import { toOpenApiSchema } from '../common/openapi/zod-openapi.js';
 import { ZodValidationPipe } from '../common/pipes/zod-validation.pipe.js';
 import type { AuthenticatedUser } from '../common/types/authenticated-user.js';
 import type { ApiResponse as ApiEnvelope } from '../common/types/api-response.js';
@@ -58,6 +60,7 @@ export class ProfileController {
     summary:
       'Update the profile, academic records, and consent in one transaction.',
   })
+  @ApiBody({ schema: toOpenApiSchema(UpdateProfileSchema), required: true })
   @ApiOkResponse({ description: 'The updated profile snapshot.' })
   @ApiConflictResponse({
     description: 'expectedVersion does not match the stored version.',
