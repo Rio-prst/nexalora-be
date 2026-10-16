@@ -1,9 +1,9 @@
 import 'reflect-metadata';
 import { NestFactory } from '@nestjs/core';
 import { SwaggerModule } from '@nestjs/swagger';
-import { AppModule } from './app.module.js';
-import { configureApp } from './bootstrap.js';
-import { buildOpenApiConfig, SWAGGER_UI_OPTIONS } from './openapi.config.js';
+import { AppModule } from '../src/app.module.js';
+import { configureApp } from '../src/bootstrap.js';
+import { buildOpenApiConfig, SWAGGER_UI_OPTIONS } from '../src/openapi.config.js';
 
 const app = configureApp(await NestFactory.create(AppModule));
 
