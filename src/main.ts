@@ -2,20 +2,12 @@ import 'reflect-metadata';
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module.js';
-import { GlobalExceptionFilter } from './common/filters/global-exception.filter.js';
-import { RequestIdInterceptor } from './common/interceptors/request-id.interceptor.js';
+import { configureApp } from './bootstrap.js';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = configureApp(await NestFactory.create(AppModule));
 
-  app.setGlobalPrefix('api');
   app.enableShutdownHooks();
-  app.enableCors();
-
-  // Registered here rather than per module so ordering is explicit: the
-  // requestId must exist on the response before the exception filter runs.
-  app.useGlobalInterceptors(new RequestIdInterceptor());
-  app.useGlobalFilters(new GlobalExceptionFilter());
 
   const openApiConfig = new DocumentBuilder()
     .setTitle('Nexalora API')
