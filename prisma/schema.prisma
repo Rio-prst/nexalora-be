@@ -106,6 +106,8 @@ model University {
   cityCode        String  @map("city_code") @db.VarChar(40)
   provinceCode    String  @map("province_code") @db.VarChar(40)
   officialWebsite String  @map("official_website") @db.Text
+  accreditation   String?
+  institutionType String? @db.VarChar(20)
 
   programs Program[]
 
@@ -120,6 +122,10 @@ model Program {
   campusLocation    String            @map("campus_location") @db.VarChar(160)
   degree            String            @db.VarChar(60)
   admissionPathsJson Json             @map("admission_paths_json")
+  quota               Int?
+  passingGradeSnbt    Float?          @map("passing_grade_snbt")
+  uktRangeMin         Int?            @map("ukt_range_min")
+  uktRangeMax         Int?            @map("ukt_range_max")
   sourceId          String            @map("source_id") @db.Uuid
   publicationStatus PublicationStatus @default(DRAFT) @map("publication_status")
   createdAt         DateTime          @default(now()) @map("created_at") @db.Timestamptz(6)
@@ -197,12 +203,17 @@ model Mission {
   majorId           String            @map("major_id") @db.VarChar(40)
   title             String            @db.VarChar(200)
   configJson        Json              @map("config_json")
+  description       String?           @db.Text
+  estimatedMinutes  Int?              @map("estimated_minutes")
+  contentJson       Json?             @map("content_json")
   reviewerName      String            @map("reviewer_name") @db.VarChar(120)
   publicationStatus PublicationStatus @default(DRAFT) @map("publication_status")
   createdAt         DateTime          @default(now()) @map("created_at") @db.Timestamptz(6)
 
   major    Major     @relation(fields: [majorId], references: [id], onDelete: Restrict)
   attempts Attempt[]
+  simulationSubmissions SimulationSubmission[]
+  miniCoursePassports   MiniCoursePassport[]
 
   @@index([majorId])
   @@map("missions")
@@ -213,6 +224,12 @@ model Career {
   title             String            @db.VarChar(160)
   summary           String            @db.Text
   activitiesJson    Json              @map("activities_json")
+  industry          String?           @db.VarChar(120)
+  salaryRangeMin    Int?              @map("salary_range_min")
+  salaryRangeMax    Int?              @map("salary_range_max")
+  outlook           String?           @db.VarChar(60)
+  challengesJson    Json?             @map("challenges_json")
+  certificationsJson Json?          @map("certifications_json")
   reviewedBy        String            @map("reviewed_by") @db.VarChar(120)
   sourceIdsJson     Json              @map("source_ids_json")
   publicationStatus PublicationStatus @default(DRAFT) @map("publication_status")
@@ -259,6 +276,19 @@ model CareerSkill {
   @@map("career_skills")
 }
 
+model User {
+  id               String    @id @default(uuid()) @db.Uuid
+  email            String    @unique @db.VarChar(255)
+  passwordHash     String    @map("password_hash") @db.VarChar(255)
+  fullName         String?   @map("full_name") @db.VarChar(120)
+  role             String    @default("STUDENT") @db.VarChar(40)
+  refreshTokenHash String?   @map("refresh_token_hash") @db.VarChar(255)
+  createdAt        DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt        DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@map("users")
+}
+
 model Profile {
   userId      String  @id @map("user_id") @db.Uuid
   displayName String? @map("display_name") @db.VarChar(120)
@@ -291,6 +321,8 @@ model Profile {
   scenarios           Scenario[]
   plans               Plan[]
   passports           Passport[]
+  simulationSubmissions SimulationSubmission[]
+  miniCoursePassports   MiniCoursePassport[]
 
   @@map("profiles")
 }
@@ -333,6 +365,21 @@ model InterestSubmission {
 
   @@index([userId, submittedAt])
   @@map("interest_submissions")
+}
+
+model InterestQuestion {
+  id                Int    @id @default(autoincrement())
+  itemId            String @unique @map("item_id") @db.VarChar(40)
+  dimension         String @db.VarChar(40)
+  cluster           String @db.VarChar(60)
+  category          String @db.VarChar(120)
+  prompt            String @db.Text
+  subtext           String? @map("subtext") @db.Text
+  position          Int
+  instrumentVersion String @map("instrument_version") @db.VarChar(40)
+
+  @@index([instrumentVersion, position])
+  @@map("interest_questions")
 }
 
 model RecommendationRun {
@@ -488,4 +535,41 @@ model AuditLog {
   @@index([userId, createdAt])
   @@index([eventName, createdAt])
   @@map("audit_logs")
+}
+
+model SimulationSubmission {
+  id                 String    @id @default(uuid()) @db.Uuid
+  userId             String    @map("user_id") @db.Uuid
+  missionId          String    @map("mission_id") @db.VarChar(80)
+  fileName           String    @map("file_name") @db.VarChar(200)
+  fileUrl            String    @map("file_url") @db.Text
+  fileSizeBytes      Int       @map("file_size_bytes")
+  studentNotes       String?   @map("student_notes") @db.Text
+  checklistConfirmed Boolean   @default(false) @map("checklist_confirmed")
+  reviewStatus       String?   @map("review_status") @db.VarChar(40)
+  ratingStars        Int?      @map("rating_stars")
+  reviewNotes        String?   @map("review_notes") @db.Text
+  reviewedAt         DateTime? @map("reviewed_at") @db.Timestamptz(6)
+  createdAt          DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  profile Profile @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  mission  Mission @relation(fields: [missionId], references: [id], onDelete: Restrict)
+
+  @@index([userId, createdAt])
+  @@index([missionId])
+  @@map("simulation_submissions")
+}
+
+model MiniCoursePassport {
+  id                String   @id @default(uuid()) @db.Uuid
+  userId            String   @map("user_id") @db.Uuid
+  missionId         String   @map("mission_id") @db.VarChar(80)
+  certificateNumber String   @unique @map("certificate_number") @db.VarChar(60)
+  completedAt       DateTime @default(now()) @map("completed_at") @db.Timestamptz(6)
+
+  profile Profile @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  mission  Mission @relation(fields: [missionId], references: [id], onDelete: Cascade)
+
+  @@index([userId, completedAt])
+  @@map("mini_course_passports")
 }

@@ -86,4 +86,35 @@ describe('RecommendationController', () => {
     expect(latest).toHaveBeenCalledWith('550e8400-e29b-41d4-a716-446655440000');
     expect(result.data).toEqual(PAYLOAD);
   });
+
+  it('lists recommendation history for the authenticated account', async () => {
+    const history = jest.fn((_userId: string) =>
+      Promise.resolve([{ id: 'run_1' } as never]),
+    );
+    const service = { history } as unknown as IRecommendationService;
+    const controller = new RecommendationController(service);
+
+    const result = await controller.history(USER, responseStub());
+
+    expect(history).toHaveBeenCalledWith(
+      '550e8400-e29b-41d4-a716-446655440000',
+    );
+    expect(result.data).toEqual([{ id: 'run_1' }]);
+  });
+
+  it('retrieves a recommendation detail by id', async () => {
+    const getById = jest.fn((_userId: string, _id: string) =>
+      Promise.resolve({ id: 'run_1' } as never),
+    );
+    const service = { getById } as unknown as IRecommendationService;
+    const controller = new RecommendationController(service);
+
+    const result = await controller.getById(USER, 'run_1', responseStub());
+
+    expect(getById).toHaveBeenCalledWith(
+      '550e8400-e29b-41d4-a716-446655440000',
+      'run_1',
+    );
+    expect(result.data).toEqual({ id: 'run_1' });
+  });
 });

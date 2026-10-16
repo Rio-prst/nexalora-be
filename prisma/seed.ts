@@ -11,6 +11,7 @@ import { seedCurricula } from './seed/curricula.js';
 import { seedScholarships } from './seed/scholarships.js';
 import { seedMissions } from './seed/missions.js';
 import { seedCareers } from './seed/careers.js';
+import { seedInterestQuestions } from './seed/interest-questions.js';
 
 function createClient(): PrismaClient {
   const connectionString = process.env.DATABASE_URL?.trim();
@@ -46,6 +47,7 @@ async function main(): Promise<void> {
     await seedScholarships(prisma);
     await seedMissions(prisma);
     await seedCareers(prisma);
+    await seedInterestQuestions(prisma);
 
     const [
       sources,
@@ -60,6 +62,7 @@ async function main(): Promise<void> {
       skills,
       careerMajors,
       careerSkills,
+      interestQuestions,
     ] = await Promise.all([
       prisma.source.count(),
       prisma.major.count(),
@@ -73,6 +76,7 @@ async function main(): Promise<void> {
       prisma.skill.count(),
       prisma.careerMajor.count(),
       prisma.careerSkill.count(),
+      prisma.interestQuestion.count(),
     ]);
 
     console.log('\nSeed finished.\n');
@@ -93,6 +97,7 @@ async function main(): Promise<void> {
       skills,
       career_majors: careerMajors,
       career_skills: careerSkills,
+      interest_questions: interestQuestions,
     });
 
     if (PUBLICATION_STATUS !== 'PUBLISHED') {

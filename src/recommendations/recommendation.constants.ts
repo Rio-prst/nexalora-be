@@ -11,3 +11,5 @@ export const CATALOG_VERSION =
   process.env['CATALOG_VERSION']?.trim() || 'pilot-v1';
 
 export const MAX_REASON_CODES = 4;
+
+export const RECOMMENDATION_HISTORY_LIMIT = 20;

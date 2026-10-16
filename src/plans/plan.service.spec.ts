@@ -1,5 +1,6 @@
 import { describe, expect, it, jest } from '@jest/globals';
 import { PlanService } from './plan.service.js';
+import { UpdateTaskSchema } from './dto/plan.dto.js';
 import type {
   IPlanRepository,
   PlanSnapshot,
@@ -231,6 +232,30 @@ describe('PlanService', () => {
 
       expect(patch.status).toBeUndefined();
       expect(patch.evidenceUrl).toBe('https://example.test/evidence.png');
+    });
+
+    it('parses frontend status terms (pending, in_progress, done, skipped) into backend TaskStatus', () => {
+      expect(
+        UpdateTaskSchema.parse({ expectedVersion: 1, status: 'pending' })
+          .status,
+      ).toBe('TODO');
+      expect(
+        UpdateTaskSchema.parse({ expectedVersion: 1, status: 'in_progress' })
+          .status,
+      ).toBe('DOING');
+      expect(
+        UpdateTaskSchema.parse({ expectedVersion: 1, status: 'done' }).status,
+      ).toBe('DONE');
+      expect(
+        UpdateTaskSchema.parse({ expectedVersion: 1, status: 'skipped' })
+          .status,
+      ).toBe('SKIPPED');
+      expect(
+        UpdateTaskSchema.parse({ expectedVersion: 1, status: 'TODO' }).status,
+      ).toBe('TODO');
+      expect(
+        UpdateTaskSchema.parse({ expectedVersion: 1, status: 'DOING' }).status,
+      ).toBe('DOING');
     });
   });
 });

@@ -72,6 +72,14 @@ export type StoredRecommendationRun = {
   createdAt: Date;
 };
 
+export type StoredRecommendationRunSummary = {
+  id: string;
+  ruleVersion: string;
+  catalogVersion: string;
+  profileVersion: number;
+  createdAt: Date;
+};
+
 export interface IRecommendationRepository {
   findProfile(userId: string): Promise<StoredProfile | null>;
   findLatestInterestSubmission(
@@ -87,6 +95,14 @@ export interface IRecommendationRepository {
   ): Promise<StoredReflection[]>;
   insertRun(run: NewRecommendationRun): Promise<StoredRecommendationRun>;
   findLatestRun(userId: string): Promise<StoredRecommendationRun | null>;
+  listRuns(
+    userId: string,
+    limit: number,
+  ): Promise<StoredRecommendationRunSummary[]>;
+  findOwnedRun(
+    userId: string,
+    id: string,
+  ): Promise<StoredRecommendationRun | null>;
 }
 
 export const IRecommendationRepository = Symbol('IRecommendationRepository');

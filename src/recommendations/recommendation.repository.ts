@@ -12,10 +12,28 @@ import type {
   StoredInterestAnswers,
   StoredProfile,
   StoredRecommendationRun,
+  StoredRecommendationRunSummary,
   StoredReflection,
 } from './interfaces/recommendation.repository.interface.js';
 
 const DEFAULT_ACADEMIC_YEAR = 2026;
+
+const RUN_SELECT = {
+  id: true,
+  ruleVersion: true,
+  catalogVersion: true,
+  profileVersion: true,
+  resultsJson: true,
+  createdAt: true,
+} as const;
+
+const RUN_SUMMARY_SELECT = {
+  id: true,
+  ruleVersion: true,
+  catalogVersion: true,
+  profileVersion: true,
+  createdAt: true,
+} as const;
 
 function readStringArray(value: unknown): string[] {
   if (!Array.isArray(value)) return [];
@@ -237,14 +255,48 @@ export class RecommendationRepository implements IRecommendationRepository {
     const row = await this.prisma.recommendationRun.findFirst({
       where: { userId },
       orderBy: [{ createdAt: 'desc' }],
-      select: {
-        id: true,
-        ruleVersion: true,
-        catalogVersion: true,
-        profileVersion: true,
-        resultsJson: true,
-        createdAt: true,
-      },
+      select: RUN_SELECT,
+    });
+
+    if (!row) return null;
+
+    return {
+      id: row.id,
+      ruleVersion: row.ruleVersion,
+      catalogVersion: row.catalogVersion,
+      profileVersion: row.profileVersion,
+      results: row.resultsJson,
+      createdAt: row.createdAt,
+    };
+  }
+
+  async listRuns(
+    userId: string,
+    limit: number,
+  ): Promise<StoredRecommendationRunSummary[]> {
+    const rows = await this.prisma.recommendationRun.findMany({
+      where: { userId },
+      orderBy: { createdAt: 'desc' },
+      take: limit,
+      select: RUN_SUMMARY_SELECT,
+    });
+
+    return rows.map((row) => ({
+      id: row.id,
+      ruleVersion: row.ruleVersion,
+      catalogVersion: row.catalogVersion,
+      profileVersion: row.profileVersion,
+      createdAt: row.createdAt,
+    }));
+  }
+
+  async findOwnedRun(
+    userId: string,
+    id: string,
+  ): Promise<StoredRecommendationRun | null> {
+    const row = await this.prisma.recommendationRun.findFirst({
+      where: { id, userId },
+      select: RUN_SELECT,
     });
 
     if (!row) return null;
