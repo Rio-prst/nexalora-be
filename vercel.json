@@ -3,6 +3,6 @@
   "installCommand": "pnpm install --frozen-lockfile",
   "buildCommand": "pnpm install --frozen-lockfile && pnpm run prisma:generate && pnpm run build",
   "functions": {
-    "api/index.ts": { "maxDuration": 60 }
+    "api/[...path].ts": { "maxDuration": 60 }
   }
 }
