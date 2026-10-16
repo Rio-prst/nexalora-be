@@ -2,7 +2,10 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "installCommand": "pnpm install --frozen-lockfile",
   "buildCommand": "pnpm install --frozen-lockfile && pnpm run prisma:generate && pnpm run build",
+  "routes": [
+    { "src": "/(.*)", "dest": "/api/index" }
+  ],
   "functions": {
-    "api/[...path].ts": { "maxDuration": 60 }
+    "api/index.ts": { "maxDuration": 60 }
   }
 }
