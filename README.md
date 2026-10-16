@@ -284,12 +284,54 @@ The server starts on `http://localhost:3000`.
 | `GET /api/profile` | The authenticated student's profile, academic records, and consents. |
 | `PATCH /api/profile` | Update profile, records, and consent. Requires `expectedVersion`. |
 | `POST /api/interests` | Store an immutable 12-item activity-interest submission. |
+| `POST /api/recommendations` | Score programs from interest coverage and cost feasibility. |
+| `GET /api/recommendations/latest` | Read the most recent stored recommendation run. |
+| `POST /api/attempts` | Start a simulation attempt. Requires `Idempotency-Key`. |
+| `GET /api/attempts/:id` | Read an attempt with its draft artifact and result. |
+| `PATCH /api/attempts/:id` | Autosave the draft. Requires `expectedRevision`. |
+| `POST /api/attempts/:id/run` | Run the engine for a scenario. Requires `expectedRevision`. |
+| `POST /api/reflections` | Store a reflection and preview its effect on ranking. |
+| `GET /api/shortlist` | Read the programs held for comparison. |
+| `PUT /api/shortlist` | Replace the comparison list with at most three programs. |
+| `POST /api/scenarios` | Recompute cost feasibility under temporary overrides. |
+| `POST /api/plans/preview` | Generate a 30-day plan draft without storing it. |
+| `POST /api/plans` | Activate a 30-day plan. Requires `Idempotency-Key`. |
+| `GET /api/plans/active` | Read the active plan and its tasks. |
+| `PATCH /api/tasks/:id` | Update a task status, due date, or evidence. |
+| `POST /api/passports` | Create an immutable snapshot with server-side redaction. |
+| `GET /api/passports/:id` | Read a passport snapshot for the printable page. |
 | `DELETE /api/account-data` | Delete every private record for the authenticated account. |
 | `GET /docs` | Interactive Swagger UI. |
 
 All routes except `/api/health`, `/api/health/ready`, and `/api/catalog*`
 require a Supabase access token. Authorize once in Swagger and the session
 keeps it.
+
+### Authentication
+
+This API issues no tokens and has no login endpoint. Sign-in and sign-up are
+handled entirely by Supabase Auth, so the frontend calls Supabase directly
+and then sends the returned access token here.
+
+```
+POST {SUPABASE_URL}/auth/v1/signup                                 → access_token
+POST {SUPABASE_URL}/auth/v1/token?grant_type=password              → access_token
+POST {SUPABASE_URL}/auth/v1/token?grant_type=refresh_token         → new access_token
+
+Authorization: Bearer <access_token>                               → this API
+```
+
+`profiles.user_id` is the Supabase `user.id`, read from the JWT `sub`
+claim, so there is no local user table and no id mapping. Product roles
+come from `app_metadata.role` in the token and default to `STUDENT`; a
+`CURATOR` account is set from the Supabase dashboard, not through this API.
+
+Signup returns no access token while email confirmation is enabled in the
+project. Disable it for local demos.
+
+The backend needs only `JWT_SECRET`, not the Supabase URL or anon key.
+That secret must match the project's JWT secret, otherwise every request is
+answered `401`.
 
 Every response uses the envelope from [`docs/API-CONTRACT.md`](docs/API-CONTRACT.md):
 
@@ -411,17 +453,26 @@ The core infrastructure is in place. Completed:
 - [x] `profile` module (`GET`/`PATCH /api/profile`, `DELETE /api/account-data`)
 - [x] `interests` module (`POST /api/interests`, immutable submissions and dimension coverage)
 - [x] `catalog` module (`GET /api/catalog`, `GET /api/catalog/programs/:id`, public and publication-gated)
+- [x] `recommendations` module (`POST /api/recommendations`, `GET /api/recommendations/latest`)
+- [x] `simulations` module (`/api/attempts` CRUD plus `POST /api/attempts/:id/run`, INF/IND/DKV engines)
+- [x] `reflections` module (`POST /api/reflections`, post-mission preview)
+- [x] `comparisons` module (`/api/shortlist`, `POST /api/scenarios`, isolated what-if)
+- [x] `plans` module (`/api/plans` and `/api/tasks/:id`, deterministic 30-day generator)
+- [x] `passports` module (`POST /api/passports`, `GET /api/passports/:id`, server-side redaction)
 - [x] `health` module and Swagger at `/docs`
 - [x] Jest unit / integration / e2e test separation
 - [x] GitHub Actions verification on every push
 
 Not yet implemented:
 
-- [ ] `recommendations`, `simulations`, `reflections`, `comparisons` modules
-- [ ] `careers`, `plans`, `passports`, `audit` modules
+- [ ] `careers` module (career cards are exposed only through `catalog` and `plans` goals)
+- [ ] `audit` module (event logging, cross-cutting, no endpoint of its own)
 
 Catalogue seed rows are written as `DRAFT`, so `GET /api/catalog` returns
 nothing until you re-seed with `SEED_PUBLICATION_STATUS=PUBLISHED`.
+
+Simulation missions and scholarships are seeded but not yet exposed on their
+own endpoints; they arrive with the modules that own them.
 
 ---
 
