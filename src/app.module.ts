@@ -6,6 +6,7 @@ import { JwtAuthGuard } from './common/guards/jwt-auth.guard.js';
 import { RolesGuard } from './common/guards/roles.guard.js';
 import { PrismaModule } from './infra/prisma/prisma.module.js';
 import { HealthModule } from './health/health.module.js';
+import { ProfileModule } from './profile/profile.module.js';
 
 @Module({
   imports: [
@@ -13,6 +14,7 @@ import { HealthModule } from './health/health.module.js';
     AuthModule,
     PrismaModule,
     HealthModule,
+    ProfileModule,
   ],
   providers: [
     // Order matters: authentication must resolve the principal before roles

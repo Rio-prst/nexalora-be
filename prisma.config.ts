@@ -23,8 +23,8 @@ function resolveMigrationUrl(): string {
   if (pooledUrl) return pooledUrl;
 
   throw new Error(
-    'Tidak ada kredensial database. Isi `DIRECT_URL` (untuk Prisma CLI) atau ' +
-      'setidaknya `DATABASE_URL` di file `.env`. Lihat `.env.example`.',
+    'No database credentials found. Set DIRECT_URL (used by the Prisma CLI) or ' +
+      'at least DATABASE_URL in the .env file. See .env.example.',
   );
 }
 
