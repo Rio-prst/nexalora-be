@@ -39,7 +39,7 @@ X-Request-Id: <optional-trace-id>
 {
   "error": {
     "code": "VERSION_CONFLICT",
-    "message": "Data telah berubah di perangkat atau tab lain",
+    "message": "Data has changed on another device or tab",
     "details": {
       "expectedVersion": 2,
       "latestVersion": 3

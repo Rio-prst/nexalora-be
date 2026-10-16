@@ -12,7 +12,7 @@ function parsePublicationStatus(): PublicationStatusType {
   const allowed = PUBLICATION_VALUES as readonly string[];
   if (!allowed.includes(value)) {
     throw new Error(
-      `SEED_PUBLICATION_STATUS="${raw}" tidak valid. Pilihan yang tersedia: ${allowed.join(', ')}`,
+      `SEED_PUBLICATION_STATUS="${raw}" is invalid. Allowed values: ${allowed.join(', ')}`,
     );
   }
   return value as PublicationStatusType;

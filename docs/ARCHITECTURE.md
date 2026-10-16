@@ -208,7 +208,7 @@ export const UpdateProfileSchema = z
       data.monthlyBudgetMax == null ||
       data.monthlyBudgetMin <= data.monthlyBudgetMax,
     {
-      message: 'monthlyBudgetMin tidak boleh melebihi monthlyBudgetMax',
+      message: 'monthlyBudgetMin must not exceed monthlyBudgetMax',
       path: ['monthlyBudgetMin'],
     },
   );
@@ -228,8 +228,8 @@ export class ZodValidationPipe implements PipeTransform {
     if (!result.success) {
       throw new BadRequestException({
         code: 'VALIDATION_ERROR',
-        message: 'Input tidak valid',
-        details: result.error.flatten(),
+        message: 'Invalid input',
+        details: z.treeifyError(result.error),
       });
     }
     return result.data;

@@ -16,7 +16,7 @@ function createClient(): PrismaClient {
   const connectionString = process.env.DATABASE_URL?.trim();
   if (!connectionString) {
     throw new Error(
-      'DATABASE_URL belum diisi. Salin .env.example menjadi .env lalu lengkapi nilainya.',
+      'DATABASE_URL is not set. Copy .env.example to .env and fill in the values.',
     );
   }
 
@@ -75,7 +75,7 @@ async function main(): Promise<void> {
       prisma.careerSkill.count(),
     ]);
 
-    console.log('\nSeed selesai.\n');
+    console.log('\nSeed finished.\n');
     console.table({
       'publication status': PUBLICATION_STATUS,
       'review status': REVIEW_STATUS,
@@ -97,9 +97,9 @@ async function main(): Promise<void> {
 
     if (PUBLICATION_STATUS !== 'PUBLISHED') {
       console.log(
-        `\nGET /api/catalog hanya mengexpose baris PUBLISHED, jadi katalog masih kosong.\n` +
-          `Angka biaya di seed adalah PLACEHOLDER dan belum diverifikasi kurator.\n` +
-          `Untuk demo lokal: SEED_PUBLICATION_STATUS=PUBLISHED pnpm run prisma:seed\n`,
+        `\nGET /api/catalog only exposes PUBLISHED rows, so the catalogue is still empty.\n` +
+          `Cost figures in the seed are PLACEHOLDER and not yet verified by a curator.\n` +
+          `For a local demo: SEED_PUBLICATION_STATUS=PUBLISHED pnpm run prisma:seed\n`,
       );
     }
   } finally {
@@ -108,6 +108,6 @@ async function main(): Promise<void> {
 }
 
 main().catch((error: unknown) => {
-  console.error('Seed gagal:', error);
+  console.error('Seed failed:', error);
   process.exit(1);
 });
