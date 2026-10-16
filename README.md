@@ -279,7 +279,17 @@ The server starts on `http://localhost:3000`.
 |---|---|
 | `GET /api/health` | Liveness probe. Performs no database query. |
 | `GET /api/health/ready` | Readiness probe. Runs `SELECT 1` against PostgreSQL. |
+| `GET /api/catalog` | Published majors and programs. Public. |
+| `GET /api/catalog/programs/:id` | One program with costs, curriculum, and sources. Public. |
+| `GET /api/profile` | The authenticated student's profile, academic records, and consents. |
+| `PATCH /api/profile` | Update profile, records, and consent. Requires `expectedVersion`. |
+| `POST /api/interests` | Store an immutable 12-item activity-interest submission. |
+| `DELETE /api/account-data` | Delete every private record for the authenticated account. |
 | `GET /docs` | Interactive Swagger UI. |
+
+All routes except `/api/health`, `/api/health/ready`, and `/api/catalog*`
+require a Supabase access token. Authorize once in Swagger and the session
+keeps it.
 
 Every response uses the envelope from [`docs/API-CONTRACT.md`](docs/API-CONTRACT.md):
 
@@ -362,7 +372,8 @@ A mandatory suite of scenarios is defined in [`docs/BUSSINES-RULES.md`](docs/BUS
 │   │   ├── decorators/         # @Public, @Roles, @CurrentUser, @IdempotencyKey
 │   │   ├── guards/             # JwtAuthGuard (Supabase HS256), RolesGuard
 │   │   ├── filters/            # GlobalExceptionFilter
-│   │   ├── interceptors/       # RequestIdInterceptor
+│   │   ├── middleware/         # request-id middleware
+│   │   ├── openapi/            # Zod-to-OpenAPI schema projection
 │   │   └── pipes/              # ZodValidationPipe
 │   ├── infra/prisma/           # PrismaService + PrismaModule (driver adapter)
 │   ├── health/                 # liveness and readiness probes
@@ -397,16 +408,20 @@ The core infrastructure is in place. Completed:
 - [x] `infra/prisma` - `PrismaService` and `PrismaModule`
 - [x] `common/` - Zod validation, global exception filter, request ID, JWT/roles guards
 - [x] `auth/` - Supabase HS256 token verification and principal resolution
+- [x] `profile` module (`GET`/`PATCH /api/profile`, `DELETE /api/account-data`)
+- [x] `interests` module (`POST /api/interests`, immutable submissions and dimension coverage)
+- [x] `catalog` module (`GET /api/catalog`, `GET /api/catalog/programs/:id`, public and publication-gated)
 - [x] `health` module and Swagger at `/docs`
 - [x] Jest unit / integration / e2e test separation
 - [x] GitHub Actions verification on every push
 
 Not yet implemented:
 
-- [ ] `profile` module (`GET`/`PATCH /api/profile`, `DELETE /api/account-data`)
-- [ ] `interests`, `catalog` modules
 - [ ] `recommendations`, `simulations`, `reflections`, `comparisons` modules
 - [ ] `careers`, `plans`, `passports`, `audit` modules
+
+Catalogue seed rows are written as `DRAFT`, so `GET /api/catalog` returns
+nothing until you re-seed with `SEED_PUBLICATION_STATUS=PUBLISHED`.
 
 ---
 
