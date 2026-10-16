@@ -16,3 +16,15 @@ export function buildOpenApiConfig() {
 export const SWAGGER_UI_OPTIONS = {
   swaggerOptions: { persistAuthorization: true },
 } as const;
+
+export const SWAGGER_UI_CDN =
+  'https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.33.0';
+
+export const SWAGGER_UI_CDN_OPTIONS = {
+  swaggerOptions: { persistAuthorization: true },
+  customCssUrl: `${SWAGGER_UI_CDN}/swagger-ui.css`,
+  customJs: [
+    `${SWAGGER_UI_CDN}/swagger-ui-bundle.js`,
+    `${SWAGGER_UI_CDN}/swagger-ui-standalone-preset.js`,
+  ],
+};
