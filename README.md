@@ -273,6 +273,24 @@ pnpm run start:prod     # production build (requires pnpm run build first)
 
 The server starts on `http://localhost:3000`.
 
+| Endpoint | Description |
+|---|---|
+| `GET /api/health` | Liveness probe. Performs no database query. |
+| `GET /api/health/ready` | Readiness probe. Runs `SELECT 1` against PostgreSQL. |
+| `GET /docs` | Interactive Swagger UI. |
+
+Every response uses the envelope from [`docs/API-CONTRACT.md`](docs/API-CONTRACT.md):
+
+```json
+{ "data": {}, "meta": { "requestId": "req_..." } }
+```
+
+```json
+{ "error": { "code": "VERSION_CONFLICT", "message": "...", "requestId": "req_..." } }
+```
+
+An `X-Request-Id` is always generated or preserved from the incoming request.
+
 ---
 
 ## Available Scripts
@@ -334,7 +352,15 @@ A mandatory suite of scenarios is defined in [`docs/BUSSINES-RULES.md`](docs/BUS
 │   ├── main.ts                 # entrypoint: global prefix, filters, Swagger
 │   ├── app.module.ts
 │   ├── common/                 # cross-cutting: pipes, filters, guards, decorators
+│   │   ├── types/              # AuthenticatedUser, Role, API envelopes
+│   │   ├── errors/             # AppError and the documented error codes
+│   │   ├── decorators/         # @Public, @Roles, @CurrentUser, @IdempotencyKey
+│   │   ├── guards/             # JwtAuthGuard (Supabase HS256), RolesGuard
+│   │   ├── filters/            # GlobalExceptionFilter
+│   │   ├── interceptors/       # RequestIdInterceptor
+│   │   └── pipes/              # ZodValidationPipe
 │   ├── infra/prisma/           # PrismaService + PrismaModule (driver adapter)
+│   ├── health/                 # liveness and readiness probes
 │   ├── generated/prisma/       # Prisma client output — git-ignored
 │   └── <module-name>/          # one folder per product capability
 │       ├── dto/                # Zod schemas
@@ -363,15 +389,17 @@ The project is at the **foundation stage**. Completed:
 - [x] Prisma 7 setup with driver adapter and `prisma.config.ts`
 - [x] 25-table database schema, initial migration applied
 - [x] Reference catalogue seed data (`prisma/seed.ts`)
+- [x] `infra/prisma` — `PrismaService` and `PrismaModule`
+- [x] `common/` — Zod validation, global exception filter, request ID, JWT/roles guards
+- [x] `health` module and Swagger at `/docs`
 - [x] Jest unit / integration / e2e test separation
 
 Not yet implemented:
 
-- [ ] `infra/prisma` — `PrismaService` and `PrismaModule`
-- [ ] `common/` — Zod pipe, global exception filter, JWT/roles guards, decorators
-- [ ] `health` module and Swagger setup
-- [ ] `auth`, `profile`, `interests`, `catalog`, `recommendations`, `simulations`,
-      `reflections`, `comparisons`, `careers`, `plans`, `passports`, `audit` modules
+- [ ] `auth` module and the demo-mode synthetic profile (`F01`)
+- [ ] `profile`, `interests`, `catalog` modules
+- [ ] `recommendations`, `simulations`, `reflections`, `comparisons` modules
+- [ ] `careers`, `plans`, `passports`, `audit` modules
 
 ---
 
