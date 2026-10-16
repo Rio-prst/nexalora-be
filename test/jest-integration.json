@@ -2,7 +2,7 @@
   "moduleFileExtensions": ["js", "json", "ts"],
   "rootDir": "..",
   "testEnvironment": "node",
-  "testRegex": ".repository\\.integration-spec\\.ts$",
+  "testRegex": "\\.integration-spec\\.ts$",
   "testPathIgnorePatterns": ["/node_modules/", "/dist/"],
   "transform": {
     "^.+\\.(t|j)s$": ["ts-jest", { "useESM": true }]
