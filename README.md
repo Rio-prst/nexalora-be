@@ -190,16 +190,27 @@ pnpm run prisma:generate     # generates the Prisma client into src/generated/pr
 
 Both are required. Prisma 7 no longer runs `generate` automatically after `migrate dev`.
 
-### 4. Seed reference data — not available yet
+### 4. Seed reference data
 
 ```bash
 pnpm run prisma:seed
 ```
 
-> **Note:** `prisma/seed.ts` has not been implemented yet (see
-> [Project Status](#project-status)). The database is usable without it, but every
-> catalogue table stays empty, so the recommendation and simulation endpoints have no
-> data to work with.
+Seeds the public catalogue: sources, majors, universities, programs, cost profiles,
+curricula, scholarships, missions, careers, and skills. Safe to run repeatedly —
+every insert is an upsert.
+
+Seeded rows are marked `publicationStatus = DRAFT`, so `GET /api/catalog` stays
+empty until a curator verifies them. Tuition figures in the seed are **placeholders**,
+not verified data. For a local demo, override the status when seeding:
+
+```bash
+# PowerShell
+$env:SEED_PUBLICATION_STATUS='PUBLISHED'; pnpm run prisma:seed
+
+# bash
+SEED_PUBLICATION_STATUS=PUBLISHED pnpm run prisma:seed
+```
 
 ---
 
@@ -216,6 +227,8 @@ pnpm run prisma:seed
 | `DATABASE_URL_TEST` | `pnpm test:integration` | Isolated schema (e.g. `?schema=test`) for repository integration tests |
 | `JWT_SECRET` | auth | Supabase JWT secret used for HS256 verification |
 | `JWT_EXPIRES_IN` | auth | Token lifetime |
+| `SEED_PUBLICATION_STATUS` | `prisma:seed` | Publication status for seeded catalogue rows (default `DRAFT`) |
+| `SEED_REVIEW_STATUS` | `prisma:seed` | Review status written to seeded `sources` rows (default `PENDING`) |
 
 `.env` is git-ignored and must never be committed.
 
@@ -315,7 +328,8 @@ A mandatory suite of scenarios is defined in [`docs/BUSSINES-RULES.md`](docs/BUS
 ├── prisma/
 │   ├── schema.prisma           # 25 models, 8 enums
 │   ├── migrations/             # versioned SQL migrations
-│   └── seed.ts                 # reference data loader (see below)
+│   └── seed.ts                 # catalogue seed entrypoint
+│   └── seed/                   # seed data per zone
 ├── src/
 │   ├── main.ts                 # entrypoint: global prefix, filters, Swagger
 │   ├── app.module.ts
@@ -348,11 +362,11 @@ The project is at the **foundation stage**. Completed:
 - [x] NestJS 11 + TypeScript ESM foundation
 - [x] Prisma 7 setup with driver adapter and `prisma.config.ts`
 - [x] 25-table database schema, initial migration applied
+- [x] Reference catalogue seed data (`prisma/seed.ts`)
 - [x] Jest unit / integration / e2e test separation
 
 Not yet implemented:
 
-- [ ] `prisma/seed.ts` — reference catalogue data
 - [ ] `infra/prisma` — `PrismaService` and `PrismaModule`
 - [ ] `common/` — Zod pipe, global exception filter, JWT/roles guards, decorators
 - [ ] `health` module and Swagger setup
@@ -377,7 +391,3 @@ Not yet implemented:
 > breaking existing links in the other documents.
 
 ---
-
-## License
-
-UNLICENSED — private repository. Built for the JOINTS UGM 2026 hackathon.
