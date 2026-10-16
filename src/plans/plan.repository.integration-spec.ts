@@ -77,7 +77,7 @@ async function seedActivePlan(prefix: string) {
 
   await repository.archiveActive(USER_A);
 
-  const plan = await repository.insertPlan(
+  await repository.insertPlan(
     {
       userId: USER_A,
       goalIds: [],
